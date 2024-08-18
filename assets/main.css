@@ -1,0 +1,24 @@
+#__nuxt {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.header {
+    position: sticky;
+    top: 0;
+    background-color: var(--pico-background-color);
+    border-bottom: 1px solid var(--pico-muted-border-color);
+    z-index: 2;
+}
+
+.main {
+    flex: 1;
+    padding-block: 2rem;
+}
+
+.footer {
+    padding-block: 1rem;
+    border-top: 1px solid var(--pico-muted-border-color);
+    text-align: center;
+}
