@@ -10,7 +10,6 @@ const SEARCH_PARAM_NAME = 'q';
 const SEARCH_PARAMS_SEPARATOR = '&';
 
 const dropdown = ref<HTMLDetailsElement>();
-const search = ref<HTMLInputElement>();
 const foodFilter = ref<string[]>([]);
 const foodListFilter = ref('');
 const priceHistoryByFood =
@@ -25,13 +24,6 @@ onMounted(() => {
     if (searchParams?.length) {
         foodFilter.value = searchParams;
     }
-
-    // Focus search input on dropdown opening
-    dropdown.value?.addEventListener('toggle', () => {
-        if (dropdown.value?.open) {
-            search.value?.focus();
-        }
-    });
 
     // Close dropdown on Escape
     window.addEventListener('keyup', (event) => {
@@ -65,7 +57,7 @@ watch(
         <summary>Select foods...</summary>
         <ul>
             <li class="search">
-                <input type="text" ref="search" v-model="foodListFilter" placeholder="Search a food" />
+                <input type="text" v-model="foodListFilter" placeholder="Search a food" />
             </li>
             <li
                 v-for="food in foodData?.foodList"
