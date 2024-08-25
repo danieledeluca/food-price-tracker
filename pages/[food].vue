@@ -1,10 +1,14 @@
 <script setup lang="ts">
-const { data } = await useFetch('/api/foods');
+const foodStore = useFoodStore();
+const foodData = computed(() => foodStore.foodData);
+
+if (!foodData.value) {
+    await foodStore.getFoodData();
+}
 
 const route = useRoute();
-const food = route.params.food as string;
-const foodTitle = Object.values(data.value?.priceHistory[food] || {}).flat()[0][PriceHistoryFields.Food];
-const foodData = Object.entries(data.value?.priceHistory[food] || {});
+const foodName = route.params.food as string;
+const priceHistory = foodData.value?.priceHistory.filter((entry) => entry[PriceHistoryFields.Food].includes(foodName));
 
 function averagePrice(data: PriceHistory[]) {
     const prices = data.map((entry) => parseFloat(entry[PriceHistoryFields.PricePerKg].replace(',', '.')));
@@ -13,22 +17,26 @@ function averagePrice(data: PriceHistory[]) {
 }
 
 useHead({
-    titleTemplate: `%s | ${foodTitle}`,
+    titleTemplate: `%s | ${foodName}`,
 });
 </script>
 
 <template>
-    <h1>{{ foodTitle }}</h1>
-    <template v-for="[quantity, data] in foodData">
-        <article class="chart">
-            <h3 v-if="foodData.length > 1">{{ PriceHistoryFields.Packaging }}: {{ quantity }}</h3>
-            <p>
-                Average price: <strong>{{ averagePrice(data) }}</strong>
-            </p>
-            <LineChart :data="data" />
-            <TableData :data="data" />
-        </article>
-    </template>
+    <h1>{{ foodName }}</h1>
+    <article
+        v-for="[quantity, quantityData] in foodStore.getPriceHistoryByQuantity(priceHistory as PriceHistory[])"
+        :key="quantity"
+        class="chart"
+    >
+        <h3 v-if="foodStore.getPriceHistoryByQuantity(priceHistory as PriceHistory[]).length > 1">
+            {{ PriceHistoryFields.Packaging }}: {{ quantity }}
+        </h3>
+        <p>
+            Average price: <strong>{{ averagePrice(quantityData) }}</strong>
+        </p>
+        <LineChart :data="quantityData" />
+        <TableData :data="quantityData" />
+    </article>
 </template>
 
 <style scoped>

@@ -3,6 +3,8 @@ import { PageObjectResponse, QueryDatabaseResponse } from '@notionhq/client/buil
 import { formatPrice } from '~/utils/formatters';
 import { Food, FoodsFields, PriceHistory, PriceHistoryFields, SupermarketsFields } from '~/utils/models';
 
+const NO_DATA_LABEL = 'No data';
+
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const priceHistoryDatabaseId = process.env.NOTION_PRICE_HISTORY_DATABASE_ID || '';
 const foodsDatabaseId = process.env.NOTION_FOODS_DATABASE_ID || '';
@@ -27,32 +29,19 @@ async function getData() {
         PriceHistoryFields.Date,
     ]);
 
-    const foods = parseData<Food>(foodsDatabase, relationDatabases);
-    const priceHistory = parseData<PriceHistory>(priceHistoryDatabase, relationDatabases).reduce<{
-        [key: string]: { [key: string]: PriceHistory[] };
-    }>((acc, entry) => {
-        const foodName = entry[PriceHistoryFields.Food].toString().toLowerCase().replace(/ /g, '-');
-
-        if (!Object.keys(acc[foodName] || {}).length) {
-            acc[foodName] = {};
-        }
-
-        if (!acc[foodName][entry[PriceHistoryFields.Packaging]]?.length) {
-            acc[foodName][entry[PriceHistoryFields.Packaging]] = [];
-        }
-
-        acc[foodName][entry[PriceHistoryFields.Packaging]].push(entry);
-
-        return acc;
-    }, {});
+    const foodList = parseData<Food>(foodsDatabase, relationDatabases);
+    const priceHistory = parseData<PriceHistory>(priceHistoryDatabase, relationDatabases);
 
     return {
-        foods,
+        foodList,
         priceHistory,
     };
 }
 
-function parseData<T>(databaseResponse: QueryDatabaseResponse, relationDatabases: PageObjectResponse[]) {
+function parseData<T extends Food | PriceHistory>(
+    databaseResponse: QueryDatabaseResponse,
+    relationDatabases: PageObjectResponse[]
+) {
     return (databaseResponse.results as PageObjectResponse[]).map((result) => {
         const icon = result.icon?.type === 'emoji' ? result.icon.emoji : '';
 
@@ -66,7 +55,6 @@ function parseData<T>(databaseResponse: QueryDatabaseResponse, relationDatabases
                 entryValue = property?.type === 'title' ? property.title[0].plain_text : '';
             }
 
-            // @ts-ignore
             acc[key] = entryValue;
 
             return acc;
@@ -99,7 +87,7 @@ function getEntryValue(entry: PageObjectResponse['properties']) {
             }
 
         case 'date':
-            return entryData.date?.start || 'No data';
+            return entryData.date?.start || NO_DATA_LABEL;
 
         case 'rollup':
             switch (entryData.rollup.type) {
@@ -107,20 +95,20 @@ function getEntryValue(entry: PageObjectResponse['properties']) {
                     return getEntryValue({ [entryKey]: entryData.rollup.array[0] } as PageObjectResponse['properties']);
 
                 default:
-                    return 'No data';
+                    return NO_DATA_LABEL;
             }
 
         case 'title':
-            return entryData.title[0]?.plain_text || 'No data';
+            return entryData.title[0]?.plain_text || NO_DATA_LABEL;
 
         case 'select':
-            return entryData.select?.name || 'No data';
+            return entryData.select?.name || NO_DATA_LABEL;
 
         case 'rich_text':
-            return entryData.rich_text[0]?.plain_text || 'No data';
+            return entryData.rich_text[0]?.plain_text || NO_DATA_LABEL;
 
         default:
-            return 'No data';
+            return NO_DATA_LABEL;
     }
 }
 

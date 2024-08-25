@@ -1,35 +1,63 @@
 <script setup lang="ts">
-import type { PriceHistory } from '~/utils/models';
+const foodStore = useFoodStore();
+const foodData = computed(() => foodStore.foodData);
 
-const { data } = await useFetch('/api/foods');
+if (!foodData.value) {
+    await foodStore.getFoodData();
+}
 
-const food = ref('');
+const SEARCH_PARAM_NAME = 'q';
+const SEARCH_PARAMS_SEPARATOR = '&';
 
-const priceHistoryFiltered = computed(() => {
-    return Object.keys(data.value?.priceHistory as {}).filter((entry) => {
-        return entry.indexOf(food.value) !== -1;
+const dropdown = ref<HTMLDetailsElement>();
+const search = ref<HTMLInputElement>();
+const foodFilter = ref<string[]>([]);
+const foodListFilter = ref('');
+const priceHistoryByFood =
+    foodData.value?.priceHistory && foodStore.getPriceHistoryBy(foodData.value.priceHistory, PriceHistoryFields.Food);
+
+onMounted(() => {
+    // Preselect food from search params
+    const searchParams = new URLSearchParams(window?.location.search)
+        .get(SEARCH_PARAM_NAME)
+        ?.split(SEARCH_PARAMS_SEPARATOR);
+
+    if (searchParams?.length) {
+        foodFilter.value = searchParams;
+    }
+
+    // Focus search input on dropdown opening
+    dropdown.value?.addEventListener('toggle', () => {
+        if (dropdown.value?.open) {
+            search.value?.focus();
+        }
+    });
+
+    // Close dropdown on Escape
+    window.addEventListener('keyup', (event) => {
+        if (dropdown.value && event.code === 'Escape') {
+            dropdown.value.open = false;
+        }
     });
 });
 
-function getTitle(key: string, quantity: string, foodName: string) {
-    return foodName + (Object.keys(data.value?.priceHistory[key] as {}).length > 1 ? ' - ' + quantity : '');
-}
+watch(
+    foodFilter,
+    (newFoodFilter) => {
+        const newUrl = new URL(window?.location.href);
 
-onMounted(() => {
-    food.value = new URLSearchParams(window?.location.search).get('q') || '';
-});
+        if (newFoodFilter.length) {
+            newUrl.searchParams.set(SEARCH_PARAM_NAME, newFoodFilter.join(SEARCH_PARAMS_SEPARATOR));
+        } else {
+            newUrl.searchParams.delete(SEARCH_PARAM_NAME);
+        }
 
-watch(food, (newFood) => {
-    const newUrl = new URL(window?.location.href);
-
-    if (newFood) {
-        newUrl.searchParams.set('q', newFood);
-    } else {
-        newUrl.searchParams.delete('q');
+        window.history.replaceState({}, '', newUrl);
+    },
+    {
+        deep: true,
     }
-
-    window.history.replaceState({}, '', newUrl);
-});
+);
 </script>
 
 <template>
@@ -37,38 +65,120 @@ watch(food, (newFood) => {
         <fieldset>
             <label for="food">
                 Food
-                <select id="food" v-model="food">
-                    <option value="">Select a food...</option>
-                    <option
-                        v-for="food in data?.foods"
-                        :value="food[FoodsFields.Name].slice(3).toLowerCase().replace(/ /g, '-')"
-                        :key="food[FoodsFields.Name]"
-                    >
-                        {{ food[FoodsFields.Name] }}
-                    </option>
-                </select>
+                <details class="dropdown" ref="dropdown">
+                    <summary>Select a food...</summary>
+                    <ul>
+                        <li class="search">
+                            <input type="text" ref="search" v-model="foodListFilter" placeholder="Search a food" />
+                        </li>
+                        <li
+                            v-for="food in foodData?.foodList"
+                            :key="food[FoodsFields.Name]"
+                            v-show="food[FoodsFields.Name].toLowerCase().indexOf(foodListFilter) !== -1"
+                        >
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    v-model="foodFilter"
+                                    :value="removeNonAsciiCharacters(food[FoodsFields.Name])"
+                                />
+                                {{ food[FoodsFields.Name] }}
+                            </label>
+                        </li>
+                    </ul>
+                </details>
             </label>
         </fieldset>
     </form>
-    <div class="charts" v-if="data?.priceHistory && priceHistoryFiltered.length">
-        <template v-for="[key, data] in Object.entries(data?.priceHistory)" :key="key">
+    <div class="active-filters" v-if="foodFilter.length">
+        <button
+            type="button"
+            v-for="(food, index) in foodFilter"
+            :key="food"
+            @click="foodFilter.splice(index, 1)"
+            class="secondary"
+        >
+            <span>{{ food }}</span>
+        </button>
+        <button v-if="foodFilter.length > 1" type="button" @click="foodFilter = []" class="remove-all">
+            <span>Remove all filters</span>
+        </button>
+    </div>
+    <div class="charts" v-if="priceHistoryByFood && Object.entries(priceHistoryByFood).length">
+        <template v-for="[foodName, priceData] in Object.entries(priceHistoryByFood)" :key="foodName">
             <NuxtLink
-                :to="{ name: 'food', params: { food: key } }"
-                v-for="[quantity, quantityData] in Object.entries(data)"
-                v-show="priceHistoryFiltered.includes(key)"
                 class="chart"
+                :to="{ name: 'food', params: { food: foodName } }"
+                v-for="[quantity, quantityData] in foodStore.getPriceHistoryByQuantity(priceData)"
+                v-show="foodFilter.includes(foodName) || !foodFilter.length"
+                :key="quantity"
             >
-                <h4 class="title">{{ getTitle(key, quantity, quantityData[0][PriceHistoryFields.Food]) }}</h4>
+                <h4 class="title">
+                    {{ foodName }}
+                    {{ foodStore.getPriceHistoryByQuantity(priceData).length > 1 ? ` - ${quantity}` : '' }}
+                </h4>
                 <LineChart :data="quantityData" />
             </NuxtLink>
         </template>
     </div>
     <div v-else class="message message-error">
-        No data found for: <strong>{{ food }}</strong>
+        No data found for: <strong>{{ foodFilter.join(', ') }}</strong>
     </div>
 </template>
 
 <style scoped>
+fieldset > label {
+    width: 100%;
+}
+
+details.dropdown summary + ul li:first-of-type {
+    margin-top: 0;
+    padding-block: calc(var(--pico-form-element-spacing-vertical) * 0.5 * 2);
+}
+
+.dropdown ul {
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.dropdown .search {
+    position: sticky;
+    top: 0;
+    background-color: var(--pico-dropdown-background-color);
+}
+
+.dropdown input[type='text'] {
+    margin-bottom: 0;
+}
+
+.active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.active-filters button {
+    --pico-form-element-spacing-vertical: 0.25rem;
+    --pico-form-element-spacing-horizontal: 0.5rem;
+
+    margin-bottom: 0;
+    font-size: 0.875em;
+}
+
+.active-filters .secondary {
+    padding-right: calc(var(--pico-form-element-spacing-horizontal) * 3);
+    background-image: var(--pico-icon-close);
+    background-position: right calc(var(--pico-form-element-spacing-horizontal) / 2) center;
+    background-size: auto 1rem;
+    background-repeat: no-repeat;
+}
+
+.active-filters .remove-all {
+    background-color: var(--pico-form-element-invalid-border-color);
+    border-color: var(--pico-form-element-invalid-border-color);
+}
+
 .chart {
     display: block;
     padding: var(--pico-block-spacing-vertical) var(--pico-block-spacing-horizontal);

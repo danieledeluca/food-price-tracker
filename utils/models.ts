@@ -42,4 +42,5 @@ export interface PriceHistory {
     [PriceHistoryFields.Brand]: string;
     [PriceHistoryFields.Supermarket]: string;
     [PriceHistoryFields.Name]: string;
+    [key: string]: string;
 }
