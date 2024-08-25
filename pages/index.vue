@@ -66,7 +66,7 @@ watch(
             <label for="food">
                 Food
                 <details class="dropdown" ref="dropdown">
-                    <summary>Select a food...</summary>
+                    <summary>Select foods...</summary>
                     <ul>
                         <li class="search">
                             <input type="text" ref="search" v-model="foodListFilter" placeholder="Search a food" />
@@ -74,7 +74,7 @@ watch(
                         <li
                             v-for="food in foodData?.foodList"
                             :key="food[FoodsFields.Name]"
-                            v-show="food[FoodsFields.Name].toLowerCase().indexOf(foodListFilter) !== -1"
+                            v-show="food[FoodsFields.Name].toLowerCase().indexOf(foodListFilter.toLowerCase()) !== -1"
                         >
                             <label>
                                 <input
