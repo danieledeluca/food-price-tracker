@@ -61,35 +61,28 @@ watch(
 </script>
 
 <template>
-    <form @submit.prevent>
-        <fieldset>
-            <label for="food">
-                Food
-                <details class="dropdown" ref="dropdown">
-                    <summary>Select foods...</summary>
-                    <ul>
-                        <li class="search">
-                            <input type="text" ref="search" v-model="foodListFilter" placeholder="Search a food" />
-                        </li>
-                        <li
-                            v-for="food in foodData?.foodList"
-                            :key="food[FoodsFields.Name]"
-                            v-show="food[FoodsFields.Name].toLowerCase().indexOf(foodListFilter.toLowerCase()) !== -1"
-                        >
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    v-model="foodFilter"
-                                    :value="removeNonAsciiCharacters(food[FoodsFields.Name])"
-                                />
-                                {{ food[FoodsFields.Name] }}
-                            </label>
-                        </li>
-                    </ul>
-                </details>
-            </label>
-        </fieldset>
-    </form>
+    <details class="dropdown" ref="dropdown">
+        <summary>Select foods...</summary>
+        <ul>
+            <li class="search">
+                <input type="text" ref="search" v-model="foodListFilter" placeholder="Search a food" />
+            </li>
+            <li
+                v-for="food in foodData?.foodList"
+                :key="food[FoodsFields.Name]"
+                v-show="food[FoodsFields.Name].toLowerCase().indexOf(foodListFilter.toLowerCase()) !== -1"
+            >
+                <label>
+                    <input
+                        type="checkbox"
+                        v-model="foodFilter"
+                        :value="removeNonAsciiCharacters(food[FoodsFields.Name])"
+                    />
+                    {{ food[FoodsFields.Name] }}
+                </label>
+            </li>
+        </ul>
+    </details>
     <div class="active-filters" v-if="foodFilter.length">
         <button
             type="button"
@@ -127,13 +120,13 @@ watch(
 </template>
 
 <style scoped>
-fieldset > label {
-    width: 100%;
-}
-
 details.dropdown summary + ul li:first-of-type {
     margin-top: 0;
     padding-block: calc(var(--pico-form-element-spacing-vertical) * 0.5 * 2);
+}
+
+.dropdown {
+    margin-bottom: 2rem;
 }
 
 .dropdown ul {
