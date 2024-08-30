@@ -50,9 +50,10 @@ function parseData<T extends Food | PriceHistory>(
 
             if (value.type === 'relation') {
                 const data = relationDatabases.find((entry) => entry.id === entryValue);
+                const icon = data?.icon?.type === 'emoji' ? data.icon.emoji : '';
                 const property = data?.properties[FoodsFields.Name];
 
-                entryValue = property?.type === 'title' ? property.title[0].plain_text : '';
+                entryValue = property?.type === 'title' ? `${icon} ${property.title[0].plain_text}`.trim() : '';
             }
 
             acc[key] = entryValue;

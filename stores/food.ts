@@ -25,14 +25,25 @@ export const useFoodStore = defineStore('food', () => {
         }, {});
     }
 
-    function getPriceHistoryByQuantity(priceHistory: PriceHistory[]) {
-        return Object.entries(getPriceHistoryBy(priceHistory, PriceHistoryFields.Packaging));
+    function getAveragePrice(data: PriceHistory[]) {
+        const prices = data.map((entry) => parseFloat(entry[PriceHistoryFields.PricePerKg].replace(',', '.')));
+
+        return formatPrice(prices.reduce((acc, price) => acc + price, 0) / prices.length);
+    }
+
+    function getFoodNameFromUrlParam(param: string) {
+        return (
+            foodData.value?.foodList.find((food) => parseUrlParam(food[FoodsFields.Name]) === param)?.[
+                FoodsFields.Name
+            ] || ''
+        );
     }
 
     return {
         foodData,
         getFoodData,
         getPriceHistoryBy,
-        getPriceHistoryByQuantity,
+        getAveragePrice,
+        getFoodNameFromUrlParam,
     };
 });

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Line } from 'vue-chartjs';
-import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js';
+import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Colors } from 'chart.js';
 
-Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
+Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Colors);
 
 const props = defineProps<{
     data: PriceHistory[];

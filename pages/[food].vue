@@ -7,14 +7,8 @@ if (!foodData.value) {
 }
 
 const route = useRoute();
-const foodName = route.params.food as string;
+const foodName = foodStore.getFoodNameFromUrlParam(route.params.food as string);
 const priceHistory = foodData.value?.priceHistory.filter((entry) => entry[PriceHistoryFields.Food].includes(foodName));
-
-function averagePrice(data: PriceHistory[]) {
-    const prices = data.map((entry) => parseFloat(entry[PriceHistoryFields.PricePerKg].replace(',', '.')));
-
-    return formatPrice(prices.reduce((acc, price) => acc + price, 0) / prices.length);
-}
 
 useHead({
     titleTemplate: `%s | ${foodName}`,
@@ -23,20 +17,24 @@ useHead({
 
 <template>
     <h1>{{ foodName }}</h1>
-    <article
-        v-for="[quantity, quantityData] in foodStore.getPriceHistoryByQuantity(priceHistory as PriceHistory[])"
-        :key="quantity"
-        class="chart"
-    >
-        <h3 v-if="foodStore.getPriceHistoryByQuantity(priceHistory as PriceHistory[]).length > 1">
-            {{ PriceHistoryFields.Packaging }}: {{ quantity }}
-        </h3>
-        <p>
-            Average price: <strong>{{ averagePrice(quantityData) }}</strong>
-        </p>
-        <LineChart :data="quantityData" />
-        <TableData :data="quantityData" />
-    </article>
+    <template v-if="priceHistory?.length">
+        <div class="charts">
+            <article
+                v-for="[supermarket, supermarketData] in Object.entries(
+                    foodStore.getPriceHistoryBy(priceHistory, PriceHistoryFields.Supermarket)
+                )"
+                :key="supermarket"
+                class="chart"
+            >
+                <h3 class="title">{{ supermarket }}</h3>
+                <p>
+                    Average price: <strong>{{ foodStore.getAveragePrice(supermarketData) }}</strong>
+                </p>
+                <LineChart :data="supermarketData" />
+                <TableData :data="supermarketData" />
+            </article>
+        </div>
+    </template>
 </template>
 
 <style scoped>

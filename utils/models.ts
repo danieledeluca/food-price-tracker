@@ -31,6 +31,7 @@ export interface Food {
     [FoodsFields.Brand]: string;
     [FoodsFields.Type]: string;
     [FoodsFields.Name]: string;
+    [key: string]: string;
 }
 
 export interface PriceHistory {

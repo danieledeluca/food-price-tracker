@@ -65,11 +65,7 @@ watch(
                 v-show="food[FoodsFields.Name].toLowerCase().indexOf(foodListFilter.toLowerCase()) !== -1"
             >
                 <label>
-                    <input
-                        type="checkbox"
-                        v-model="foodFilter"
-                        :value="removeNonAsciiCharacters(food[FoodsFields.Name])"
-                    />
+                    <input type="checkbox" v-model="foodFilter" :value="parseUrlParam(food[FoodsFields.Name])" />
                     {{ food[FoodsFields.Name] }}
                 </label>
             </li>
@@ -83,28 +79,39 @@ watch(
             @click="foodFilter.splice(index, 1)"
             class="secondary"
         >
-            <span>{{ food }}</span>
+            <span>{{ foodStore.getFoodNameFromUrlParam(food) }}</span>
         </button>
         <button v-if="foodFilter.length > 1" type="button" @click="foodFilter = []" class="remove-all">
             <span>Remove all filters</span>
         </button>
     </div>
-    <div class="charts" v-if="priceHistoryByFood && Object.entries(priceHistoryByFood).length">
-        <template v-for="[foodName, priceData] in Object.entries(priceHistoryByFood)" :key="foodName">
-            <NuxtLink
-                class="chart"
-                :to="{ name: 'food', params: { food: foodName } }"
-                v-for="[quantity, quantityData] in foodStore.getPriceHistoryByQuantity(priceData)"
-                v-show="foodFilter.includes(foodName) || !foodFilter.length"
-                :key="quantity"
+    <div class="foods" v-if="priceHistoryByFood && Object.entries(priceHistoryByFood).length">
+        <article
+            class="food"
+            v-for="[foodName, foodData] in Object.entries(priceHistoryByFood)"
+            :key="foodName"
+            v-show="foodFilter.includes(parseUrlParam(foodName)) || !foodFilter.length"
+        >
+            <h4 class="title">
+                {{ foodName }}
+            </h4>
+            <div
+                class="content"
+                v-if="Object.entries(foodStore.getPriceHistoryBy(foodData, PriceHistoryFields.Supermarket)).length"
             >
-                <h4 class="title">
-                    {{ foodName }}
-                    {{ foodStore.getPriceHistoryByQuantity(priceData).length > 1 ? ` - ${quantity}` : '' }}
-                </h4>
-                <LineChart :data="quantityData" />
-            </NuxtLink>
-        </template>
+                <p>Average prices:</p>
+                <div
+                    class="supermarket"
+                    v-for="[supermarket, supermarketData] in Object.entries(
+                        foodStore.getPriceHistoryBy(foodData, PriceHistoryFields.Supermarket)
+                    )"
+                    :key="supermarket"
+                >
+                    <span>{{ supermarket }}:</span> <strong>{{ foodStore.getAveragePrice(supermarketData) }}</strong>
+                </div>
+            </div>
+            <NuxtLink class="link" :to="{ name: 'food', params: { food: parseUrlParam(foodName) } }" />
+        </article>
     </div>
     <div v-else class="message message-error">
         No data found for: <strong>{{ foodFilter.join(', ') }}</strong>
@@ -164,22 +171,23 @@ details.dropdown summary + ul li:first-of-type {
     border-color: var(--pico-form-element-invalid-border-color);
 }
 
-.chart {
-    display: block;
-    padding: var(--pico-block-spacing-vertical) var(--pico-block-spacing-horizontal);
-    background-color: var(--pico-card-background-color);
-    border: 1px solid var(--pico-card-border-color);
-    border-radius: var(--pico-border-radius);
-    box-shadow: var(--pico-card-box-shadow);
-    text-decoration: none;
+.foods {
+    display: grid;
+    gap: 2rem;
 }
 
-.chart:hover {
-    background-color: var(--pico-card-sectioning-background-color);
+.food {
+    position: relative;
+    margin-bottom: 0;
 }
 
-.title {
-    text-align: center;
+.food:hover {
+    --pico-card-background-color: var(--pico-card-sectioning-background-color);
+}
+
+.link {
+    position: absolute;
+    inset: 0;
 }
 
 .message {
@@ -195,20 +203,8 @@ details.dropdown summary + ul li:first-of-type {
 }
 
 @media screen and (min-width: 768px) {
-    .charts {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-        gap: 2rem;
-    }
-
-    .charts > * {
-        min-width: 0;
-    }
-}
-
-@media screen and (max-width: 767.98px) {
-    .chart:not(:last-child) {
-        margin-bottom: 2rem;
+    .foods {
+        grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
     }
 }
 </style>

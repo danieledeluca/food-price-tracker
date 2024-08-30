@@ -11,29 +11,6 @@ const chartColors = computed(() => {
     };
 });
 
-const supermarketColors = {
-    [Supermarkets.Amazon]: {
-        backgroundColor: 'rgb(244, 144, 12)',
-        borderColor: 'rgb(193, 113, 9)',
-    },
-    [Supermarkets.Coop]: {
-        backgroundColor: 'rgb(221, 46, 68)',
-        borderColor: 'rgb(170, 35, 52)',
-    },
-    [Supermarkets.Despar]: {
-        backgroundColor: 'rgb(119, 178, 86)',
-        borderColor: 'rgb(84, 126, 61)',
-    },
-    [Supermarkets.Emisfero]: {
-        backgroundColor: 'rgb(85, 172, 239)',
-        borderColor: 'rgb(66, 135, 188)',
-    },
-    [Supermarkets.Lidl]: {
-        backgroundColor: 'rgb(252, 204, 89)',
-        borderColor: 'rgb(201, 162, 70)',
-    },
-};
-
 function getChartLabels(data: PriceHistory[]) {
     return [
         ...data.reduce<Set<string>>((acc, entry) => {
@@ -46,17 +23,13 @@ function getChartLabels(data: PriceHistory[]) {
 
 function getChartDatasets(data: PriceHistory[]): ChartDataset<'line'>[] {
     return data.reduce<ChartDataset<'line'>[]>((acc, entry) => {
-        const supermarket = entry[PriceHistoryFields.Supermarket];
-        const index = acc.findIndex((data) => data.label === supermarket);
-        const colors = supermarketColors[supermarket as keyof typeof supermarketColors];
+        const index = acc.findIndex((data) => data.label === entry[PriceHistoryFields.Packaging]);
         const price = parseFloat(entry[PriceHistoryFields.PricePerKg].replace(',', '.'));
 
         if (index === -1) {
             acc.push({
-                label: entry[PriceHistoryFields.Supermarket],
+                label: entry[PriceHistoryFields.Packaging],
                 data: [price],
-                backgroundColor: colors?.backgroundColor,
-                borderColor: colors?.borderColor,
             });
         } else {
             acc[index].data.push(price);
@@ -96,7 +69,7 @@ function getChartOptions(): ChartOptions<'line'> {
                 },
                 title: {
                     display: true,
-                    text: PriceHistoryFields.PricePerKg,
+                    text: 'Price per kg',
                     color: chartColors.value.title,
                 },
                 ticks: {
@@ -110,6 +83,11 @@ function getChartOptions(): ChartOptions<'line'> {
         plugins: {
             legend: {
                 labels: {
+                    color: chartColors.value.title,
+                },
+                title: {
+                    display: true,
+                    text: 'Packaging (g)',
                     color: chartColors.value.title,
                 },
             },
@@ -129,6 +107,9 @@ function getChartOptions(): ChartOptions<'line'> {
                         return label;
                     },
                 },
+            },
+            colors: {
+                enabled: true,
             },
         },
     };
