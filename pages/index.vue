@@ -6,6 +6,12 @@ if (!foodData.value) {
     await foodStore.getFoodData();
 }
 
+// Remove duplicates
+const [...foodList] =
+    foodData.value?.foodList.reduce((acc, food) => {
+        return acc.add(food[FoodsFields.Name]);
+    }, new Set<string>([])) || new Set<string>([]);
+
 const SEARCH_PARAM_NAME = 'q';
 const SEARCH_PARAMS_SEPARATOR = '&';
 
@@ -59,16 +65,14 @@ watch(
             <li class="search">
                 <input type="text" v-model="foodListFilter" placeholder="Search a food" />
             </li>
-            <li
-                v-for="food in foodData?.foodList"
-                :key="food[FoodsFields.Name]"
-                v-show="food[FoodsFields.Name].toLowerCase().indexOf(foodListFilter.toLowerCase()) !== -1"
-            >
-                <label>
-                    <input type="checkbox" v-model="foodFilter" :value="parseUrlParam(food[FoodsFields.Name])" />
-                    {{ food[FoodsFields.Name] }}
-                </label>
-            </li>
+            <template v-for="food in foodList">
+                <li v-show="food.toLowerCase().indexOf(foodListFilter.toLowerCase()) !== -1">
+                    <label>
+                        <input type="checkbox" v-model="foodFilter" :value="parseUrlParam(food)" />
+                        {{ food }}
+                    </label>
+                </li>
+            </template>
         </ul>
     </details>
     <div class="active-filters" v-if="foodFilter.length">
