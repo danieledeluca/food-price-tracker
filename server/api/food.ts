@@ -10,11 +10,24 @@ const priceHistoryDatabaseId = process.env.NOTION_PRICE_HISTORY_DATABASE_ID || '
 const foodsDatabaseId = process.env.NOTION_FOODS_DATABASE_ID || '';
 const supermarketsDatabaseId = process.env.NOTION_SUPERMARKETS_DATABASE_ID || '';
 
-async function getDatabaseData(databaseId: string, sortByProperties: string[]) {
-    return await notion.databases.query({
+async function getDatabaseData(
+    databaseId: string,
+    sortByProperties: string[],
+    startCursor: string | undefined = undefined
+) {
+    const data = await notion.databases.query({
         database_id: databaseId,
         sorts: sortByProperties.map((property) => ({ property, direction: 'ascending' })),
+        start_cursor: startCursor,
     });
+
+    if (data.has_more) {
+        const additionalData = await getDatabaseData(databaseId, sortByProperties, data.next_cursor || undefined);
+
+        data.results.push(...additionalData.results);
+    }
+
+    return data;
 }
 
 async function getData() {
