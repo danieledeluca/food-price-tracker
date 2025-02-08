@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useFoodStore } from '~~/stores/food';
+
 const foodStore = useFoodStore();
 const foodData = computed(() => foodStore.foodData);
 
@@ -19,7 +21,8 @@ const dropdown = ref<HTMLDetailsElement>();
 const foodFilter = ref<string[]>([]);
 const foodListFilter = ref('');
 const priceHistoryByFood =
-    foodData.value?.priceHistory && foodStore.getPriceHistoryBy(foodData.value.priceHistory, PriceHistoryFields.Food);
+    foodData.value?.priceHistory &&
+    foodStore.getPriceHistoryBy(foodData.value.priceHistory, PriceHistoryFields.Food);
 
 onMounted(() => {
     // Preselect food from search params
@@ -54,7 +57,7 @@ watch(
     },
     {
         deep: true,
-    }
+    },
 );
 </script>
 
@@ -85,7 +88,12 @@ watch(
         >
             <span>{{ foodStore.getFoodNameFromUrlParam(food) }}</span>
         </button>
-        <button v-if="foodFilter.length > 1" type="button" @click="foodFilter = []" class="remove-all">
+        <button
+            v-if="foodFilter.length > 1"
+            type="button"
+            @click="foodFilter = []"
+            class="remove-all"
+        >
             <span>Remove all filters</span>
         </button>
     </div>
@@ -101,20 +109,28 @@ watch(
             </h4>
             <div
                 class="content"
-                v-if="Object.entries(foodStore.getPriceHistoryBy(foodData, PriceHistoryFields.Supermarket)).length"
+                v-if="
+                    Object.entries(
+                        foodStore.getPriceHistoryBy(foodData, PriceHistoryFields.Supermarket),
+                    ).length
+                "
             >
                 <p>Average prices:</p>
                 <div
                     class="supermarket"
                     v-for="[supermarket, supermarketData] in Object.entries(
-                        foodStore.getPriceHistoryBy(foodData, PriceHistoryFields.Supermarket)
+                        foodStore.getPriceHistoryBy(foodData, PriceHistoryFields.Supermarket),
                     )"
                     :key="supermarket"
                 >
-                    <span>{{ supermarket }}:</span> <strong>{{ foodStore.getAveragePrice(supermarketData) }}</strong>
+                    <span>{{ supermarket }}:</span>
+                    <strong>{{ foodStore.getAveragePrice(supermarketData) }}</strong>
                 </div>
             </div>
-            <NuxtLink class="link" :to="{ name: 'food', params: { food: parseUrlParam(foodName) } }" />
+            <NuxtLink
+                class="link"
+                :to="{ name: 'food', params: { food: parseUrlParam(foodName) } }"
+            />
         </article>
     </div>
     <div v-else class="message message-error">

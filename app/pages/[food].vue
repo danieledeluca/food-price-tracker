@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useFoodStore } from '~~/stores/food';
+
 const foodStore = useFoodStore();
 const foodData = computed(() => foodStore.foodData);
 
@@ -8,7 +10,9 @@ if (!foodData.value) {
 
 const route = useRoute();
 const foodName = foodStore.getFoodNameFromUrlParam(route.params.food as string);
-const priceHistory = foodData.value?.priceHistory.filter((entry) => entry[PriceHistoryFields.Food].includes(foodName));
+const priceHistory = foodData.value?.priceHistory.filter((entry) =>
+    entry[PriceHistoryFields.Food].includes(foodName),
+);
 
 useHead({
     titleTemplate: `%s | ${foodName}`,
@@ -21,7 +25,7 @@ useHead({
         <div class="charts">
             <article
                 v-for="[supermarket, supermarketData] in Object.entries(
-                    foodStore.getPriceHistoryBy(priceHistory, PriceHistoryFields.Supermarket)
+                    foodStore.getPriceHistoryBy(priceHistory, PriceHistoryFields.Supermarket),
                 )"
                 :key="supermarket"
                 class="chart"

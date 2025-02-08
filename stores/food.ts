@@ -2,7 +2,9 @@ export const useFoodStore = defineStore('food', () => {
     const foodData = ref<{ foodList: Food[]; priceHistory: PriceHistory[] } | null>(null);
 
     async function getFoodData() {
-        const { data } = await useFetch('/api/food');
+        const { data } = await useFetch('/api/food', {
+            deep: true
+        });
 
         foodData.value = {
             foodList: unSerializeObject(data.value?.foodList),

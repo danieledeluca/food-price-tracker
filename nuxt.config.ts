@@ -3,6 +3,9 @@ export default defineNuxtConfig({
     compatibilityDate: '2024-04-03',
     devtools: { enabled: true },
     pages: true,
+    future: {
+        compatibilityVersion: 4,
+    },
     app: {
         head: {
             title: 'Food Price Tracker',
