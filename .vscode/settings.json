@@ -1,0 +1,13 @@
+{
+  // Set the default formatter
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // Set Vue preffered style
+  "vue.complete.casing.props": "camel",
+  "vue.complete.casing.tags": "pascal"
+}
