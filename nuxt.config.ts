@@ -14,9 +14,13 @@ export default defineNuxtConfig({
                     rel: 'stylesheet',
                     href: 'https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css',
                 },
+                {
+                    rel: 'stylesheet',
+                    href: 'https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css',
+                },
             ],
         },
     },
     css: ['~/assets/main.css'],
-    modules: ['@pinia/nuxt', '@nuxt/eslint'],
+    modules: ['@nuxt/eslint', '@nuxtjs/color-mode', '@pinia/nuxt'],
 });

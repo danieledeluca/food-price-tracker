@@ -1,5 +1,4 @@
 export enum Supermarkets {
-    Amazon = 'Amazon',
     Coop = 'Coop',
     Despar = 'Despar',
     Emisfero = 'Emisfero',
@@ -31,7 +30,6 @@ export interface Food {
     [FoodsFields.Brand]: string;
     [FoodsFields.Type]: string;
     [FoodsFields.Name]: string;
-    [key: string]: string;
 }
 
 export interface PriceHistory {
@@ -43,5 +41,4 @@ export interface PriceHistory {
     [PriceHistoryFields.Brand]: string;
     [PriceHistoryFields.Supermarket]: string;
     [PriceHistoryFields.Name]: string;
-    [key: string]: string;
 }

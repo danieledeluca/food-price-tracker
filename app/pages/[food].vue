@@ -1,18 +1,19 @@
 <script setup lang="ts">
-import { useFoodStore } from '~~/stores/food';
+const route = useRoute();
+const food = route.params.food as string;
 
 const foodStore = useFoodStore();
-const foodData = computed(() => foodStore.foodData);
+await foodStore.fetchData();
 
-if (!foodData.value) {
-    await foodStore.getFoodData();
+const foodName = parseFoodName(foodStore.foods, food) || '';
+const currentPriceHistory = groupBy(foodStore.priceHistory, PriceHistoryFields.Food)?.[foodName];
+
+if (!foodName) {
+    throw createError({
+        statusCode: 404,
+        message: 'Food not found',
+    });
 }
-
-const route = useRoute();
-const foodName = foodStore.getFoodNameFromUrlParam(route.params.food as string);
-const priceHistory = foodData.value?.priceHistory.filter((entry) =>
-    entry[PriceHistoryFields.Food].includes(foodName),
-);
 
 useHead({
     titleTemplate: `%s | ${foodName}`,
@@ -21,32 +22,35 @@ useHead({
 
 <template>
     <h1>{{ foodName }}</h1>
-    <template v-if="priceHistory?.length">
-        <div class="charts">
-            <article
-                v-for="[supermarket, supermarketData] in Object.entries(
-                    foodStore.getPriceHistoryBy(priceHistory, PriceHistoryFields.Supermarket),
-                )"
-                :key="supermarket"
-                class="chart"
-            >
-                <h3 class="title">{{ supermarket }}</h3>
-                <p>
-                    Average price: <strong>{{ foodStore.getAveragePrice(supermarketData) }}</strong>
-                </p>
-                <LineChart :data="supermarketData" />
-                <TableData :data="supermarketData" />
-            </article>
-        </div>
+    <template v-if="currentPriceHistory?.length">
+        <article
+            v-for="(supermarketPriceHistory, supermarket) in groupBy(
+                currentPriceHistory,
+                PriceHistoryFields.Supermarket,
+            )"
+            :key="supermarket"
+        >
+            <h3>{{ supermarket }}</h3>
+            <p>
+                Average price: <strong>{{ getAveragePrice(supermarketPriceHistory) }}</strong>
+            </p>
+            <LineChart :priceHistory="supermarketPriceHistory" />
+            <TableData :priceHistory="supermarketPriceHistory" />
+        </article>
     </template>
+    <AppMessage v-else text="We couldn't find any data matching this food" type="warning" />
 </template>
 
 <style scoped>
-.chart {
+h1 {
+    margin-bottom: 2rem;
+}
+
+article {
     margin-bottom: 0;
 }
 
-.chart:not(:last-child) {
+article:not(:last-child) {
     margin-bottom: 2rem;
 }
 </style>

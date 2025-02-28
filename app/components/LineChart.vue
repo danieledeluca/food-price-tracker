@@ -1,16 +1,27 @@
 <script setup lang="ts">
+import {
+    CategoryScale,
+    Chart,
+    Colors,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Tooltip,
+} from 'chart.js';
 import { Line } from 'vue-chartjs';
-import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Colors } from 'chart.js';
 
-Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Colors);
-
-const props = defineProps<{
-    data: PriceHistory[];
+const { priceHistory } = defineProps<{
+    priceHistory: PriceHistory[];
 }>();
 
-const chartConfig = computed(() => getChartConfig(props.data));
+const { chartConfigs } = useChartConfigs(priceHistory);
+
+Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Colors);
 </script>
 
 <template>
-    <Line :options="chartConfig.chartOptions" :data="chartConfig.chartData">Chart couldn't be loaded.</Line>
+    <Line :options="chartConfigs.chartOptions" :data="chartConfigs.chartData">
+        Chart couldn't be loaded.
+    </Line>
 </template>

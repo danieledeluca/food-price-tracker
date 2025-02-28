@@ -1,9 +1,10 @@
 <script setup lang="ts">
-const props = defineProps<{ data: PriceHistory[] }>();
+const { priceHistory } = defineProps<{
+    priceHistory: PriceHistory[];
+}>();
 
 const tableFields = [
     PriceHistoryFields.Brand,
-    PriceHistoryFields.Supermarket,
     PriceHistoryFields.Date,
     PriceHistoryFields.Packaging,
     PriceHistoryFields.PricePerPack,
@@ -12,7 +13,7 @@ const tableFields = [
 </script>
 
 <template>
-    <div class="table-data overflow-auto">
+    <div class="table-wrapper overflow-auto">
         <table class="striped">
             <thead>
                 <tr>
@@ -22,9 +23,24 @@ const tableFields = [
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="entry in props.data" :key="entry[PriceHistoryFields.Food]">
+                <tr v-for="entry in priceHistory" :key="entry[PriceHistoryFields.Food]">
                     <td v-for="field in tableFields" :key="field" :data-th="field">
-                        {{ entry[field] }}
+                        <template
+                            v-if="
+                                [
+                                    PriceHistoryFields.PricePerPack,
+                                    PriceHistoryFields.PricePerKg,
+                                ].includes(field)
+                            "
+                        >
+                            {{ formatPrice(entry[field]) }}
+                        </template>
+                        <template v-else-if="field === PriceHistoryFields.Date">
+                            {{ formatDate(entry[field]) }}
+                        </template>
+                        <template v-else>
+                            {{ entry[field] }}
+                        </template>
                     </td>
                 </tr>
             </tbody>
@@ -33,34 +49,12 @@ const tableFields = [
 </template>
 
 <style scoped>
-.table-data {
+.table-wrapper {
     margin-top: 2rem;
 }
 
 table {
     margin-bottom: 0;
-}
-
-@media screen and (min-width: 768px) {
-    table {
-        white-space: nowrap;
-    }
-}
-
-@media screen and (max-width: 767.98px) {
-    table thead {
-        display: none;
-    }
-
-    table td {
-        display: flex;
-    }
-
-    table td::before {
-        content: attr(data-th) ': ';
-        display: inline-block;
-        padding-right: 0.5rem;
-        font-weight: 700;
-    }
+    white-space: nowrap;
 }
 </style>
